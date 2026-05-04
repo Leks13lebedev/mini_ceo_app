@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Т-Банк — Мобильное приложение</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --yellow: #FFDD2D;
+    --black: #1A1A1A;
+    --white: #FFFFFF;
+    --gray: #F5F5F5;
+    --gray-2: #EFEFEF;
+    --gray-border: #E0E0E0;
+    --gray-text: #8A8A8A;
+    --green: #28C76F;
+    --red: #FF3B30;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  html, body {
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: #d8dbe0;
+    color: var(--black);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--white);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 12px #1a1a1a, 0 0 0 14px #2a2a2a;
+  }
+  .status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    font-weight: 600;
+    font-size: 15px;
+    background: var(--white);
+    position: relative;
+    z-index: 5;
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+  .notch {
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 30px;
+    background: #1a1a1a;
+    border-radius: 100px;
+    z-index: 10;
+  }
+
+  .app {
+    height: calc(100% - 44px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Screens */
+  .screen {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 92px;
+    background: var(--gray);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen.active { opacity: 1; pointer-events: auto; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* Common */
+  .screen-header {
+    padding: 16px 20px 8px;
+    background: var(--gray);
+  }
+  .screen-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .screen-subtitle {
+    font-size: 14px;
+    color: var(--gray-text);
+    margin-top: 2px;
+  }
+  .btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 15px;
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--yellow); color: var(--black); }
+  .btn-secondary { border: 1.5px solid var(--gray-border); background: var(--white); color: var(--black); }
+  .btn-block { width: 100%; }
+
+  /* Home Screen */
+  .tb-header {
+    padding: 12px 20px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--gray);
+  }
+  .tb-user { display: flex; align-items: center; gap: 14px; }
+  .tb-avatar {
+    width: 44px; height: 44px;
+    background: #B8B8B8;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .tb-name { font-size: 24px; font-weight: 800; letter-spacing: -0.3px; display: flex; align-items: center; }
+  .tb-chev { font-weight: 400; color: var(--gray-text); margin-left: 6px; font-size: 22px; }
+  .tb-gift {
+    width: 44px; height: 44px;
+    background: #7B3FE4;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .tb-search {
+    margin: 0 20px 16px;
+    background: #ECECEC;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    color: var(--gray-text);
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .tb-search-icon { opacity: 0.5; }
+
+  .tb-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 16px;
+  }
+  .tb-card-big {
+    flex: 1;
+    background: var(--white);
+    border-radius: 20px;
+    padding: 18px 16px 16px;
+    display: flex; flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .tb-card-big:active { transform: scale(0.98); }
+  .tb-card-title { font-size: 17px; font-weight: 700; margin-bottom: 12px; line-height: 1.15; }
+  .tb-card-meta { font-size: 14px; color: #555; margin-bottom: auto; line-height: 1.3; }
+  .tb-card-meta .tb-amt { font-size: 16px; color: var(--black); font-weight: 600; margin-top: 2px; }
+  .tb-bar {
+    display: flex; gap: 2px; height: 6px;
+    border-radius: 4px; overflow: hidden;
+    margin-top: 14px;
+    background: var(--gray-2);
+  }
+
+  .tb-right-col {
+    flex: 1;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .tb-card-mini {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 14px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform 0.1s;
+    min-height: 88px;
+  }
+  .tb-card-mini:active { transform: scale(0.97); }
+  .tb-mini-row { display: flex; align-items: center; min-height: 28px; }
+  .tb-mini-icons { display: flex; }
+  .tb-mi {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    border: 2px solid white;
+    margin-left: -6px;
+  }
+  .tb-mi:first-child { margin-left: 0; }
+  .tb-cb-badge {
+    background: var(--yellow);
+    color: var(--black);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .tb-mini-title { font-size: 17px; font-weight: 700; margin-top: 6px; }
+  .tb-mini-sub { font-size: 12px; color: var(--gray-text); margin-top: 2px; }
+
+  .tb-quick {
+    display: flex; justify-content: space-between;
+    padding: 0 16px 18px; gap: 4px;
+  }
+  .tb-qa {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .tb-qa-icon {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .tb-qa-label {
+    font-size: 12px; text-align: center;
+    font-weight: 500; line-height: 1.2;
+    color: var(--black);
+  }
+
+  .tb-black-card {
+    background: var(--white);
+    margin: 0 20px 16px;
+    border-radius: 20px;
+    padding: 18px;
+    cursor: pointer;
+  }
+  .tb-bc-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .tb-rub {
+    width: 44px; height: 44px;
+    background: #428BF9;
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 22px;
+  }
+  .tb-bc-info { flex: 1; }
+  .tb-bc-amount { font-size: 24px; font-weight: 800; letter-spacing: -0.3px; }
+  .tb-bc-name { font-size: 14px; color: var(--gray-text); margin-top: 1px; }
+  .tb-bc-cb {
+    background: var(--black);
+    color: white;
+    padding: 5px 10px 5px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .tb-card-thumb {
+    width: 56px; height: 36px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #2a2a2a 100%);
+    border-radius: 6px;
+    color: white;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 4px 6px;
+    font-size: 9px; font-weight: 600;
+    margin-bottom: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .tb-topup {
+    background: #EBF1FF;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 500;
+    cursor: pointer;
+  }
+  .tb-topup-icon {
+    background: white;
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--yellow); font-size: 11px;
+  }
+  .tb-topup-arrow { color: var(--gray-text); font-size: 18px; }
+
+  .tb-banner {
+    background: var(--white);
+    margin: 0 20px 24px;
+    border-radius: 20px;
+    padding: 18px 16px;
+    display: flex; align-items: center;
+    gap: 12px;
+  }
+  .tb-banner-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .tb-banner-sub { font-size: 13px; color: #555; }
+  .tb-banner-icon { font-size: 36px; margin-left: auto; }
+
+  /* Stories */
+  .stories {
+    display: flex;
+    gap: 12px;
+    padding: 4px 20px 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+  .stories::-webkit-scrollbar { display: none; }
+  .story {
+    flex-shrink: 0;
+    width: 70px;
+    cursor: pointer;
+    text-align: center;
+    scroll-snap-align: start;
+  }
+  .story-circle {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    padding: 3px;
+    background: var(--gray-border);
+    margin-bottom: 6px;
+  }
+  .story.promo .story-circle {
+    background: linear-gradient(135deg, var(--yellow), #FFB800);
+  }
+  .story-inner {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 26px;
+  }
+  .story-inner.colored {
+    color: white;
+    font-weight: 700;
+    font-size: 22px;
+  }
+  .story-label {
+    font-size: 12px;
+    line-height: 1.2;
+    color: var(--black);
+  }
+
+  /* Promo widget */
+  .widget-section { padding: 8px 20px 16px; }
+  .widget-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .widget-sub { font-size: 13px; color: var(--gray-text); margin-bottom: 12px; }
+  .scroll-row {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    margin: 0 -20px;
+    padding: 4px 20px;
+    scroll-snap-type: x mandatory;
+  }
+  .scroll-row::-webkit-scrollbar { display: none; }
+  .promo-mini {
+    flex-shrink: 0;
+    width: 200px;
+    background: var(--white);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    scroll-snap-align: start;
+  }
+  .promo-mini .shop-logo {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+  .promo-mini .shop-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .promo-mini .discount { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .promo-mini .save { font-size: 12px; color: var(--gray-text); margin-top: 4px; }
+
+  /* Saved widget */
+  .saved-widget {
+    background: var(--yellow);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 8px 20px 20px;
+  }
+  .saved-widget .label { font-size: 13px; font-weight: 600; margin-bottom: 6px; opacity: 0.7; }
+  .saved-widget .amount { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+  .saved-widget .hint { font-size: 13px; margin-top: 6px; opacity: 0.7; }
+
+  /* Promo screen cards */
+  .filter-row {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 8px 20px 16px;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    background: var(--white);
+    border: 1.5px solid var(--gray-border);
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chip.active { background: var(--black); color: var(--white); border-color: var(--black); }
+
+  /* Map link banner */
+  .map-link {
+    margin: 0 20px 16px;
+    background: var(--white);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.1s;
+  }
+  .map-link:active { transform: scale(0.98); }
+  .map-link-mini {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background:
+      linear-gradient(135deg, transparent 30%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.05) 32%, transparent 32%),
+      linear-gradient(45deg, transparent 30%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.05) 32%, transparent 32%),
+      #DCE4D6;
+    background-size: 14px 14px, 18px 18px;
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .map-mini-pin { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 2; }
+  .map-link-text { flex: 1; }
+  .map-link-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .map-link-sub { font-size: 13px; color: var(--gray-text); }
+  .map-link-arrow { color: var(--gray-text); font-size: 22px; }
+
+  /* Back button */
+  .header-with-back { display: flex; align-items: center; gap: 10px; }
+  .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--white);
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--black); font-weight: 600;
+    flex-shrink: 0;
+    box-shadow: var(--shadow);
+    line-height: 1;
+    padding-bottom: 2px; padding-right: 2px;
+  }
+  .back-btn:active { transform: scale(0.94); }
+
+  .promo-list { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+  .promo-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+  }
+  .pc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .pc-head .shop-logo {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    color: white; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .pc-head h3 { font-size: 15px; font-weight: 700; }
+  .pc-head .cat { font-size: 12px; color: var(--gray-text); margin-top: 2px; }
+  .pc-discount {
+    display: flex; align-items: baseline;
+    justify-content: space-between; margin-bottom: 12px;
+  }
+  .pc-discount .num { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+  .pc-discount .exp { font-size: 12px; color: var(--gray-text); }
+  .pc-save {
+    background: #FFF8D6; border-radius: 10px;
+    padding: 10px 14px; font-size: 13px; font-weight: 500; margin-bottom: 12px;
+  }
+  .pc-actions { display: flex; gap: 8px; }
+  .pc-apply { flex: 1; padding: 12px; font-size: 14px; }
+  .pc-share {
+    width: 44px; height: 44px;
+    background: var(--gray); border-radius: 12px; border: none;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .pc-code-reveal { display: none; flex-direction: column; gap: 8px; }
+  .pc-code-reveal.show { display: flex; }
+  .pc-code {
+    background: var(--black); color: var(--white);
+    border-radius: 12px; padding: 12px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-weight: 700; text-align: center;
+    letter-spacing: 1px; font-size: 16px;
+  }
+  .pc-copy {
+    background: var(--gray); border: none; border-radius: 10px;
+    padding: 10px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .pc-copy.copied { background: var(--green); color: white; }
+
+  /* Cashback Screen */
+  .cashback-card {
+    background: var(--yellow);
+    border-radius: 20px;
+    padding: 22px;
+    margin: 8px 20px 20px;
+  }
+  .cashback-card .title { font-size: 14px; font-weight: 600; opacity: 0.7; margin-bottom: 4px; }
+  .cashback-card .amount { font-size: 36px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.8px; }
+  .cashback-card .cats { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .cashback-card .cat-row { display: flex; justify-content: space-between; font-size: 14px; font-weight: 500; }
+  .cashback-card .cat-row .pct { font-weight: 700; }
+  .choose-btn {
+    background: var(--black); color: var(--white);
+    width: 100%; border: none; border-radius: 12px;
+    padding: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; font-size: 14px;
+  }
+
+  .partner-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+  .partner-card {
+    background: var(--white); border-radius: 16px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  .partner-card .shop-logo {
+    width: 44px; height: 44px; border-radius: 50%;
+    color: white; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .partner-info { flex: 1; }
+  .partner-info .name { font-weight: 600; font-size: 15px; }
+  .partner-info .pct { color: var(--green); font-weight: 700; font-size: 14px; margin-top: 2px; }
+  .partner-go {
+    background: var(--gray); color: var(--black); border: none;
+    border-radius: 10px; padding: 8px 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit; font-size: 13px;
+  }
+
+  .history-block {
+    background: var(--white); border-radius: 16px;
+    margin: 16px 20px; overflow: hidden;
+  }
+  .history-block h4 { padding: 16px 16px 8px; font-size: 16px; font-weight: 700; }
+  .history-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--gray);
+  }
+  .history-row .shop-logo {
+    width: 36px; height: 36px; border-radius: 50%;
+    color: white; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .history-row .info { flex: 1; font-size: 14px; }
+  .history-row .info .when { color: var(--gray-text); font-size: 12px; margin-top: 2px; }
+  .history-row .amount { font-weight: 700; color: var(--green); font-size: 15px; }
+
+  /* Map screen */
+  .geo-banner {
+    background: var(--white); margin: 8px 20px 12px;
+    border-radius: 16px; padding: 16px;
+    box-shadow: var(--shadow); transition: background 0.3s;
+  }
+  .geo-banner.enabled { background: #E5F8EE; }
+  .geo-banner h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .geo-banner p { font-size: 13px; color: var(--gray-text); margin-bottom: 14px; }
+  .geo-banner.enabled p { color: #1c6b3e; }
+  .geo-banner.enabled h4 { color: #1c6b3e; }
+  .geo-actions { display: flex; gap: 8px; }
+  .geo-actions .btn { flex: 1; padding: 10px; font-size: 14px; }
+
+  .map-block {
+    height: 240px; margin: 0 20px; border-radius: 16px;
+    background:
+      linear-gradient(135deg, transparent 30%, rgba(0,0,0,0.04) 30%, rgba(0,0,0,0.04) 32%, transparent 32%),
+      linear-gradient(45deg, transparent 30%, rgba(0,0,0,0.04) 30%, rgba(0,0,0,0.04) 32%, transparent 32%),
+      #DCE4D6;
+    background-size: 40px 40px, 60px 60px;
+    position: relative; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .map-block::before {
+    content: ''; position: absolute; width: 200%; height: 4px;
+    background: rgba(255,255,255,0.6); top: 50%; left: -50%; transform: rotate(-15deg);
+  }
+  .map-block::after {
+    content: ''; position: absolute; width: 4px; height: 200%;
+    background: rgba(255,255,255,0.6); left: 60%; top: -50%; transform: rotate(20deg);
+  }
+  .pin {
+    position: absolute;
+    width: 38px; height: 38px;
+    background: var(--yellow);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--black); font-weight: 700; z-index: 2;
+  }
+  .pin span { transform: rotate(45deg); font-size: 14px; font-weight: 700; }
+  .pin:hover { transform: rotate(-45deg) scale(1.1); }
+  .pin.p1 { top: 22%; left: 18%; }
+  .pin.p2 { top: 55%; left: 58%; }
+  .pin.p3 { top: 68%; left: 28%; }
+  .pin.p4 { top: 20%; right: 12%; }
+  .pin.p5 { top: 40%; left: 42%; }
+  .pin.pin-grey { background: #C4C4C4 !important; cursor: default; }
+  .pin.pin-grey span { color: #888; }
+
+  .nearby-list { padding: 16px 20px 0; display: flex; flex-direction: column; gap: 10px; }
+  .nearby-card {
+    background: var(--white); border-radius: 16px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  .nearby-card .shop-logo {
+    width: 40px; height: 40px; border-radius: 12px;
+    color: white; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .nearby-card .info { flex: 1; }
+  .nearby-card .name { font-weight: 600; font-size: 14px; }
+  .nearby-card .meta { font-size: 12px; color: var(--gray-text); margin-top: 2px; }
+  .nearby-card .badge {
+    background: var(--yellow); color: var(--black);
+    font-weight: 700; border-radius: 8px; padding: 6px 10px; font-size: 13px;
+  }
+  .nearby-card .badge-grey {
+    background: var(--gray-border); color: var(--gray-text);
+    font-weight: 600; border-radius: 8px; padding: 6px 10px; font-size: 12px;
+  }
+
+  /* Profile */
+  .profile-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px 20px; }
+  .profile-header .avatar { width: 60px; height: 60px; font-size: 22px; }
+  .profile-header .name { font-size: 20px; font-weight: 800; }
+  .profile-header .email { font-size: 13px; color: var(--gray-text); }
+
+  .stats-card {
+    background: var(--white); border-radius: 16px;
+    margin: 0 20px 16px; padding: 16px; box-shadow: var(--shadow);
+  }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+  .stat-row + .stat-row { border-top: 1px solid var(--gray); }
+  .stat-row .label { font-size: 14px; color: var(--gray-text); }
+  .stat-row .value { font-weight: 700; font-size: 16px; }
+  .stat-row .value.big { font-size: 22px; color: var(--black); letter-spacing: -0.5px; }
+
+  .settings-card {
+    background: var(--white); border-radius: 16px;
+    margin: 0 20px 16px; box-shadow: var(--shadow); overflow: hidden;
+  }
+  .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; }
+  .setting-row + .setting-row { border-top: 1px solid var(--gray); }
+  .setting-row .label { font-size: 15px; font-weight: 500; }
+  .toggle {
+    width: 48px; height: 28px; background: var(--gray-border);
+    border-radius: 100px; position: relative;
+    cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle::after {
+    content: ''; position: absolute;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: white; top: 3px; left: 3px;
+    transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle.on { background: var(--green); }
+  .toggle.on::after { transform: translateX(20px); }
+
+  /* Bottom tab bar */
+  .tabbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--white); height: 78px;
+    display: flex; justify-content: space-around;
+    align-items: center; padding: 8px 0 18px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.06); z-index: 50;
+  }
+  .tab {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer; color: var(--gray-text); transition: color 0.2s; padding: 4px 0;
+  }
+  .tab svg { width: 24px; height: 24px; }
+  .tab .label { font-size: 10px; font-weight: 600; }
+  .tab.active { color: var(--black); }
+  .tab.active .icon-wrap { background: var(--yellow); border-radius: 12px; padding: 4px 12px; }
+  .icon-wrap { padding: 4px 12px; transition: all 0.2s; }
+
+  /* Story fullscreen */
+  .story-screen {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
+    z-index: 100; display: none; flex-direction: column;
+    color: white; padding: 20px;
+  }
+  .story-screen.show { display: flex; }
+  .story-progress { display: flex; gap: 4px; margin-top: 4px; margin-bottom: 16px; }
+  .story-progress .bar {
+    flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;
+  }
+  .story-progress .bar.active::after {
+    content: ''; display: block; width: 100%; height: 100%;
+    background: white; animation: progress 5s linear forwards;
+  }
+  .story-progress .bar.done { background: rgba(255,255,255,0.85); }
+  @keyframes progress { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  .story-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .story-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; }
+  .story-close {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); border: none;
+    color: white; font-size: 18px; cursor: pointer;
+  }
+  .story-content {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; gap: 24px;
+  }
+  .story-content h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+  .story-emoji { font-size: 56px; line-height: 1; }
+  .story-sub { font-size: 15px; opacity: 0.7; margin-top: -16px; }
+  .story-content .promo-big {
+    background: var(--yellow); color: var(--black);
+    border-radius: 20px; padding: 30px 24px;
+    width: 100%; max-width: 280px;
+  }
+  .promo-big .shop { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .promo-big .disc { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; margin-bottom: 8px; }
+  .promo-big .save-tag { font-size: 14px; font-weight: 600; opacity: 0.8; }
+  .story-bottom { padding-bottom: 30px; }
+  .story-apply {
+    background: var(--yellow); color: var(--black);
+    width: 100%; border: none; border-radius: 14px;
+    padding: 16px; font-weight: 700; cursor: pointer;
+    font-family: inherit; font-size: 16px;
+  }
+
+  /* Bottom sheet */
+  .sheet-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none; z-index: 80; align-items: flex-end;
+  }
+  .sheet-overlay.show { display: flex; }
+  .sheet {
+    background: var(--white); width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 30px;
+    animation: slideup 0.3s ease;
+  }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle {
+    width: 40px; height: 4px; background: var(--gray-border);
+    border-radius: 4px; margin: -8px auto 16px;
+  }
+  .sheet h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+  .sheet p { font-size: 14px; color: var(--gray-text); margin-bottom: 20px; }
+  .share-btns { display: flex; flex-direction: column; gap: 8px; }
+  .share-btn {
+    background: var(--gray); border: none; border-radius: 12px;
+    padding: 14px 16px; font-family: inherit; font-size: 15px;
+    font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 12px;
+  }
+  .share-btn .icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .share-btn.tg .icon { background: #2AABEE; }
+  .share-btn.wa .icon { background: #25D366; }
+  .share-btn.link .icon { background: var(--black); }
+
+  /* Map sheet */
+  .map-sheet h3 { margin-bottom: 4px; }
+  .map-sheet .pinfo {
+    background: var(--yellow); border-radius: 14px;
+    padding: 16px; margin: 16px 0 12px;
+  }
+  .map-sheet .pinfo .disc { font-size: 28px; font-weight: 800; }
+  .map-sheet .pinfo .save { font-size: 13px; margin-top: 4px; opacity: 0.75; }
+
+  /* ========== НОВЫЕ ДОБАВЛЕНИЯ ========== */
+
+  /* PUSH NOTIFICATION */
+  .push-overlay {
+    position: absolute; inset: 0;
+    background: rgba(18,18,18,0.72);
+    z-index: 200;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 72px 16px 0;
+    backdrop-filter: blur(8px);
+    animation: fadePush 0.3s ease;
+  }
+  .push-overlay.gone { display: none; }
+  @keyframes fadePush { from { opacity: 0; } to { opacity: 1; } }
+  .push-card {
+    background: white; border-radius: 16px;
+    padding: 14px 16px 16px; width: 100%;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    animation: slidePush 0.4s cubic-bezier(0.2,1,0.3,1);
+  }
+  @keyframes slidePush {
+    from { transform: translateY(-16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .push-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .push-icon {
+    width: 26px; height: 26px; background: var(--yellow);
+    border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; font-weight: 800; font-size: 13px;
+  }
+  .push-app-lbl { font-size: 12px; font-weight: 600; flex: 1; color: #444; }
+  .push-time-lbl { font-size: 11px; color: var(--gray-text); }
+  .push-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .push-body { font-size: 13px; color: #555; margin-bottom: 14px; line-height: 1.4; }
+  .push-btns { display: flex; gap: 8px; }
+  .push-later, .push-activate {
+    flex: 1; border: none; border-radius: 10px;
+    padding: 10px; font-size: 14px; cursor: pointer; font-family: inherit;
+  }
+  .push-later { background: #EFEFEF; color: var(--black); font-weight: 600; }
+  .push-activate { background: var(--yellow); color: var(--black); font-weight: 700; }
+
+  /* GEO STRIP */
+  .geo-strip {
+    background: var(--black); color: white;
+    margin: 8px 20px 20px; border-radius: 14px;
+    padding: 14px 16px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: opacity 0.2s; line-height: 1.55;
+  }
+  .geo-strip:active { opacity: 0.8; }
+  .geo-strip .geo-partners { font-size: 12px; opacity: 0.65; margin-top: 3px; }
+
+  /* TRANSACTION FEED */
+  .feed-date-label {
+    font-size: 13px; font-weight: 600; color: var(--gray-text);
+    padding: 14px 20px 6px;
+  }
+  .tx-group {
+    background: var(--white); border-radius: 16px;
+    margin: 0 20px 12px; box-shadow: var(--shadow); overflow: hidden;
+  }
+  .tx-item {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  }
+  .tx-item + .tx-item { border-top: 1px solid var(--gray); }
+  .tx-shop-logo {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; color: white; flex-shrink: 0;
+  }
+  .tx-info { flex: 1; }
+  .tx-name { font-size: 15px; font-weight: 600; }
+  .tx-when { font-size: 12px; color: var(--gray-text); margin-top: 2px; }
+  .tx-amount { font-size: 15px; font-weight: 700; }
+  .tx-hint-row {
+    padding: 10px 16px; background: var(--yellow);
+    display: flex; align-items: center; gap: 8px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    transition: background 0.25s;
+    border-radius: 0;
+  }
+  .tx-hint-row.activated { background: #E5F8EE; }
+  .tx-hint-text { font-size: 12px; font-weight: 600; flex: 1; line-height: 1.35; }
+  .tx-hint-text.activated { color: #1c6b3e; }
+  .tx-tap-btn {
+    background: var(--black); color: white; border: none;
+    border-radius: 8px; padding: 6px 12px;
+    font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    display: flex; align-items: center; gap: 4px;
+    transition: opacity 0.15s;
+  }
+  .tx-tap-btn:active { opacity: 0.75; }
+
+  /* 5-PROMO STORY OVERLAY */
+  .promo-story-screen {
+    position: absolute; inset: 0;
+    background: linear-gradient(150deg, #1f1c18 0%, #2d2a25 100%);
+    z-index: 110; display: none; flex-direction: column;
+    padding: 20px 20px 30px;
+  }
+  .promo-story-screen.show { display: flex; }
+  .pst-dots { display: flex; gap: 4px; margin-bottom: 18px; }
+  .pst-dots span { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.25); }
+  .pst-dots span.on { background: white; }
+  .pst-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 24px;
+  }
+  .pst-title { font-size: 22px; font-weight: 800; color: white; letter-spacing: -0.4px; line-height: 1.2; }
+  .pst-sub { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 6px; }
+  .pst-cards { flex: 1; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+  .pst-card {
+    background: rgba(255,255,255,0.1); border-radius: 16px;
+    padding: 16px; display: flex; align-items: center; gap: 14px;
+  }
+  .pst-logo {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px; color: white; flex-shrink: 0;
+  }
+  .pst-info { flex: 1; }
+  .pst-name { color: white; font-size: 15px; font-weight: 700; }
+  .pst-disc { color: var(--yellow); font-size: 22px; font-weight: 800; margin-top: 2px; }
+  .pst-btn {
+    background: var(--yellow); color: var(--black); border: none;
+    border-radius: 10px; padding: 8px 14px;
+    font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+    transition: background 0.2s, color 0.2s;
+  }
+  .pst-btn.done { background: var(--green); color: white; pointer-events: none; }
+
+  /* CASHBACK + PROMO COMBINED */
+  .cb-promo-block { padding: 4px 20px 16px; }
+  .cb-promo-heading { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+  .cb-pcard {
+    background: var(--white); border-radius: 16px;
+    padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 12px;
+  }
+  .cb-pcard-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .cb-pcard-meta { flex: 1; }
+  .cb-pcard-name { font-size: 15px; font-weight: 700; }
+  .cb-pcard-sub { font-size: 12px; color: var(--gray-text); margin-top: 2px; font-family: monospace; letter-spacing: 0.5px; }
+  .cb-tag { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 4px 8px; }
+  .tag-keep { background: #E5F8EE; color: #1c6b3e; }
+  .tag-return { background: #FFF8D6; color: #7a5c00; }
+  .tag-catch { background: #FFE8E6; color: #c0392b; }
+  .cb-combined-row {
+    background: var(--gray); border-radius: 10px;
+    padding: 10px 12px; font-size: 13px; font-weight: 500;
+    margin-bottom: 10px; line-height: 1.55;
+  }
+  .cb-combined-row strong { font-weight: 700; color: var(--black); }
+  .cb-code-block {
+    display: none; background: var(--black); color: white;
+    border-radius: 10px; padding: 10px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-weight: 700; text-align: center;
+    letter-spacing: 1px; font-size: 15px; margin-top: 8px;
+  }
+  .cb-code-block.show { display: block; }
+
+  /* SEGMENTED CONTROL */
+  .seg-control {
+    display: flex;
+    margin: 4px 20px 16px;
+    background: #EFEFEF;
+    border-radius: 12px;
+    padding: 3px;
+  }
+  .seg-btn {
+    flex: 1; border: none; border-radius: 10px;
+    padding: 9px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    background: transparent; color: var(--gray-text);
+    transition: all 0.2s;
+  }
+  .seg-btn.active {
+    background: white; color: var(--black);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+
+  /* MAP: user pin */
+  .user-pin {
+    position: absolute; width: 16px; height: 16px;
+    background: #4A90E2; border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(74,144,226,0.5);
+    z-index: 4; top: 50%; left: 48%;
+    transform: translate(-50%,-50%);
+  }
+  .user-pin::after {
+    content: ''; position: absolute;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid rgba(74,144,226,0.35);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="status-bar">
+    <span>14:19</span>
+    <span class="status-icons">
+      <span>•••</span><span>📶</span><span style="background:var(--black);color:white;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">52</span>
+    </span>
+  </div>
+
+  <div class="app">
+
+    <!-- ============== HOME ============== -->
+    <div class="screen active" id="screen-home">
+
+      <div class="tb-header">
+        <div class="tb-user">
+          <div class="tb-avatar">И</div>
+          <div class="tb-name">Илья<span class="tb-chev">›</span></div>
+        </div>
+        <div class="tb-gift">🎁</div>
+      </div>
+
+      <!-- Stories (добавлена «5 промо») -->
+      <div class="stories">
+        <div class="story promo" onclick="openPromoStory()">
+          <div class="story-circle"><div class="story-inner" style="font-size:20px;font-weight:800;background:var(--yellow);color:var(--black)">5<br><span style="font-size:10px;font-weight:600">промо</span></div></div>
+          <div class="story-label">5 промо</div>
+        </div>
+        <div class="story promo" onclick="openStory(0)">
+          <div class="story-circle"><div class="story-inner">⚡</div></div>
+          <div class="story-label">Твои промо</div>
+        </div>
+        <div class="story" onclick="openStory(1)">
+          <div class="story-circle"><div class="story-inner colored" style="background:#C9A961">З</div></div>
+          <div class="story-label">Beauty</div>
+        </div>
+        <div class="story" onclick="openStory(2)">
+          <div class="story-circle"><div class="story-inner colored" style="background:#FC3F1D">Я</div></div>
+          <div class="story-label">Еда</div>
+        </div>
+        <div class="story" onclick="openStory(3)">
+          <div class="story-circle"><div class="story-inner colored" style="background:#005BFF">O</div></div>
+          <div class="story-label">Ozon</div>
+        </div>
+        <div class="story" onclick="openStory(4)">
+          <div class="story-circle"><div class="story-inner colored" style="background:#FF3D8B">С</div></div>
+          <div class="story-label">Самокат</div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="tb-search" onclick="switchBonuses('promo')">
+        <span class="tb-search-icon">🔍</span>
+        <span>Поиск</span>
+      </div>
+
+      <!-- Cards row — «Все операции» теперь кликабельна -->
+      <div class="tb-row">
+        <div class="tb-card-big" onclick="switchScreen('feed')">
+          <div class="tb-card-title">Все операции</div>
+          <div class="tb-card-meta">
+            <div>Трат в апреле</div>
+            <div class="tb-amt">118 642 ₽</div>
+          </div>
+          <div class="tb-bar">
+            <span style="background:#5BC8AC;flex:3.5"></span>
+            <span style="background:#3FCDD9;flex:1.6"></span>
+            <span style="background:#FFB347;flex:1.2"></span>
+            <span style="background:#E64545;flex:1"></span>
+            <span style="background:#9B6FD8;flex:1"></span>
+            <span style="background:#E0E0E0;flex:3"></span>
+          </div>
+        </div>
+        <div class="tb-right-col">
+          <div class="tb-card-mini" onclick="switchBonuses('promo')" style="flex:1">
+            <div class="tb-mini-row" style="justify-content:space-between;align-items:flex-start">
+              <div class="tb-mini-icons">
+                <div class="tb-mi" style="background:#000;color:white">L</div>
+                <div class="tb-mi" style="background:#C9A961;color:white">З</div>
+                <div class="tb-mi" style="background:#FC3F1D;color:white">Я</div>
+              </div>
+              <div class="tb-cb-badge">+580 ₽</div>
+            </div>
+            <div class="tb-mini-title">Бонусы</div>
+            <div class="tb-mini-sub">Промокоды и кэшбэк</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="tb-quick">
+        <div class="tb-qa">
+          <div class="tb-qa-icon" style="background:linear-gradient(135deg,#FFDD2D 0%,#FFE883 60%,#fff 100%)"><span>▶</span></div>
+          <div class="tb-qa-label">Перевести<br>по телефону</div>
+        </div>
+        <div class="tb-qa">
+          <div class="tb-qa-icon" style="background:#E8F2FF;color:#0080FF;font-size:28px;font-weight:300">+</div>
+          <div class="tb-qa-label">Пополнить<br>Black</div>
+        </div>
+        <div class="tb-qa">
+          <div class="tb-qa-icon" style="background:#E8F2FF;color:#0080FF;font-size:22px">⇄</div>
+          <div class="tb-qa-label">Между<br>счетами</div>
+        </div>
+        <div class="tb-qa">
+          <div class="tb-qa-icon" style="background:#E8F2FF;color:#0080FF;font-size:20px">⊞</div>
+          <div class="tb-qa-label">Сканировать<br>QR-код</div>
+        </div>
+      </div>
+
+      <!-- Black card -->
+      <div class="tb-black-card">
+        <div class="tb-bc-row">
+          <div class="tb-rub">₽</div>
+          <div class="tb-bc-info">
+            <div class="tb-bc-amount">0 ₽</div>
+            <div class="tb-bc-name">Black</div>
+          </div>
+          <div class="tb-bc-cb">👑 46 ₽</div>
+        </div>
+        <div class="tb-card-thumb">3588</div>
+        <div class="tb-topup">
+          <span class="tb-topup-icon">▶</span>
+          <span style="flex:1">Пополнить из другого банка</span>
+          <span class="tb-topup-arrow">›</span>
+        </div>
+      </div>
+
+      <!-- Banner -->
+      <div class="tb-banner">
+        <div>
+          <div class="tb-banner-title">Не пропускайте выплаты</div>
+          <div class="tb-banner-sub">Выберите счёт Black на Госуслугах</div>
+        </div>
+        <div class="tb-banner-icon">📋</div>
+      </div>
+
+      <!-- ГЕО-ПЛАШКА -->
+      <div class="geo-strip" onclick="gotoMap('home')">
+        📍 Рядом 3 места с промокодом
+        <div class="geo-partners">Самокат · Суши-мастер · Золотое яблоко</div>
+      </div>
+
+    </div>
+
+    <!-- ============== ЛЕНТА ТРАТ ============== -->
+    <div class="screen" id="screen-feed">
+      <div class="screen-header header-with-back">
+        <button class="back-btn" onclick="switchScreen('home')">‹</button>
+        <div>
+          <div class="screen-title">Операции</div>
+          <div class="screen-subtitle">История трат по карте</div>
+        </div>
+      </div>
+      <div id="feedList"></div>
+    </div>
+
+    <!-- ============== BONUSES (Промокоды + Кэшбэк) ============== -->
+    <div class="screen" id="screen-bonuses">
+      <div class="screen-header">
+        <div class="screen-title">Бонусы</div>
+        <div class="screen-subtitle">Промокоды и кэшбэк от партнёров</div>
+      </div>
+
+      <div class="seg-control">
+        <button class="seg-btn active" id="seg-promo" onclick="showBonusTab('promo')">Промокоды</button>
+        <button class="seg-btn" id="seg-cashback" onclick="showBonusTab('cashback')">Кэшбэк</button>
+      </div>
+
+      <!-- ===== PROMO SUB-VIEW ===== -->
+      <div id="bonus-promo-view">
+        <div class="map-link" onclick="gotoMap('bonuses')">
+          <div class="map-link-mini">
+            <div class="map-mini-pin">📍</div>
+          </div>
+          <div class="map-link-text">
+            <div class="map-link-title">Магазины рядом на карте</div>
+            <div class="map-link-sub">Промокоды в магазинах поблизости</div>
+          </div>
+          <div class="map-link-arrow">›</div>
+        </div>
+
+        <div class="filter-row" id="filterRow">
+          <div class="chip active" data-cat="all">Все</div>
+          <div class="chip" data-cat="beauty">Beauty</div>
+          <div class="chip" data-cat="еда">Еда</div>
+          <div class="chip" data-cat="одежда">Одежда</div>
+          <div class="chip" data-cat="продукты">Продукты</div>
+        </div>
+
+        <div class="promo-list" id="promoList"></div>
+      </div>
+
+      <!-- ===== CASHBACK SUB-VIEW ===== -->
+      <div id="bonus-cashback-view" style="display:none">
+        <div class="cashback-card">
+          <div class="title">Кэшбэк этого месяца</div>
+          <div class="amount">+ 580 ₽</div>
+          <div class="cats">
+            <div class="cat-row"><span>⛽ АЗС</span><span class="pct">5%</span></div>
+            <div class="cat-row"><span>🍽 Рестораны</span><span class="pct">3%</span></div>
+            <div class="cat-row"><span>🛒 Супермаркеты</span><span class="pct">2%</span></div>
+            <div class="cat-row"><span>💳 Всё остальное</span><span class="pct">1%</span></div>
+          </div>
+          <button class="choose-btn">Выбрать категории кэшбэка</button>
+        </div>
+
+        <div class="cb-promo-block">
+          <div class="cb-promo-heading">Промокоды для тебя</div>
+
+          <div class="cb-pcard">
+            <div class="cb-pcard-top">
+              <div class="shop-logo" style="background:#FF3D8B;width:44px;height:44px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700">С</div>
+              <div class="cb-pcard-meta">
+                <div class="cb-pcard-name">Самокат</div>
+                <div class="cb-pcard-sub">TBANK15</div>
+              </div>
+              <div class="cb-tag tag-keep">Удержание</div>
+            </div>
+            <div class="cb-combined-row">
+              Промокод −15% + кэшбэк 3% = <strong>итого −18%</strong>
+            </div>
+            <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="revealCbCode(this,'TBANK15','cb-samokat')">Применить</button>
+            <div class="cb-code-block" id="cb-samokat">TBANK15</div>
+          </div>
+
+          <div class="cb-pcard">
+            <div class="cb-pcard-top">
+              <div class="shop-logo" style="background:#28C76F;width:44px;height:44px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700">В</div>
+              <div class="cb-pcard-meta">
+                <div class="cb-pcard-name">ВкусВилл</div>
+                <div class="cb-pcard-sub">VKUSVILL10</div>
+              </div>
+              <div class="cb-tag tag-return">Возврат</div>
+            </div>
+            <div class="cb-combined-row">
+              Промокод −10% + кэшбэк 2% = <strong>итого −12%</strong>
+            </div>
+            <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="revealCbCode(this,'VKUSVILL10','cb-vkusvill')">Применить</button>
+            <div class="cb-code-block" id="cb-vkusvill">VKUSVILL10</div>
+          </div>
+
+          <div class="cb-pcard">
+            <div class="cb-pcard-top">
+              <div class="shop-logo" style="background:#00704A;width:44px;height:44px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700">S</div>
+              <div class="cb-pcard-meta">
+                <div class="cb-pcard-name">Starbucks</div>
+                <div class="cb-pcard-sub">COFFEE15</div>
+              </div>
+              <div class="cb-tag tag-keep">Удержание</div>
+            </div>
+            <div class="cb-combined-row">
+              Промокод −15% + кэшбэк 3% = <strong>итого −18%</strong>
+            </div>
+            <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="revealCbCode(this,'COFFEE15','cb-starbucks')">Применить</button>
+            <div class="cb-code-block" id="cb-starbucks">COFFEE15</div>
+          </div>
+
+          <!-- Суши-мастер — появляется после активации пуша -->
+          <div class="cb-pcard" id="cbcard-sushi" style="display:none">
+            <div class="cb-pcard-top">
+              <div class="shop-logo" style="background:#E74C3C;width:44px;height:44px;border-radius:50%;font-size:14px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700">СМ</div>
+              <div class="cb-pcard-meta">
+                <div class="cb-pcard-name">Суши-мастер</div>
+                <div class="cb-pcard-sub">SUSHI20</div>
+              </div>
+              <div class="cb-tag tag-catch">Захват</div>
+            </div>
+            <div class="cb-combined-row">
+              Промокод −20% + кэшбэк 3% = <strong>итого −23%</strong>
+            </div>
+            <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="revealCbCode(this,'SUSHI20','cb-sushi')">Применить</button>
+            <div class="cb-code-block" id="cb-sushi">SUSHI20</div>
+          </div>
+        </div>
+
+        <div class="widget-section" style="padding-top:0">
+          <div class="widget-title" style="padding:0 0 12px">Партнёры с кэшбэком</div>
+        </div>
+        <div class="partner-list">
+          <div class="partner-card">
+            <div class="shop-logo" style="background:#FC3F1D">Я</div>
+            <div class="partner-info"><div class="name">Яндекс Еда</div><div class="pct">7% кэшбэк</div></div>
+            <button class="partner-go">Перейти</button>
+          </div>
+          <div class="partner-card">
+            <div class="shop-logo" style="background:#FF3D8B">С</div>
+            <div class="partner-info"><div class="name">Самокат</div><div class="pct">5% кэшбэк</div></div>
+            <button class="partner-go">Перейти</button>
+          </div>
+          <div class="partner-card">
+            <div class="shop-logo" style="background:#C9A961">З</div>
+            <div class="partner-info"><div class="name">Золотое Яблоко</div><div class="pct">10% кэшбэк</div></div>
+            <button class="partner-go">Перейти</button>
+          </div>
+          <div class="partner-card">
+            <div class="shop-logo" style="background:#005BFF">O</div>
+            <div class="partner-info"><div class="name">Ozon</div><div class="pct">3% кэшбэк</div></div>
+            <button class="partner-go">Перейти</button>
+          </div>
+        </div>
+
+        <div class="history-block">
+          <h4>История начислений</h4>
+          <div class="history-row">
+            <div class="shop-logo" style="background:#FC3F1D">Я</div>
+            <div class="info">Яндекс Еда<div class="when">вчера</div></div>
+            <div class="amount">+84 ₽</div>
+          </div>
+          <div class="history-row">
+            <div class="shop-logo" style="background:#FF3D8B">С</div>
+            <div class="info">Самокат<div class="when">3 дня назад</div></div>
+            <div class="amount">+156 ₽</div>
+          </div>
+          <div class="history-row">
+            <div class="shop-logo" style="background:#C9A961">З</div>
+            <div class="info">Золотое Яблоко<div class="when">неделю назад</div></div>
+            <div class="amount">+320 ₽</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== MAP ============== -->
+    <div class="screen" id="screen-map">
+      <div class="screen-header header-with-back">
+        <button class="back-btn" id="mapBackBtn" onclick="switchScreen(mapCameFrom)">‹</button>
+        <div>
+          <div class="screen-title">Карта промокодов</div>
+          <div class="screen-subtitle">Магазины рядом со скидками</div>
+        </div>
+      </div>
+
+      <div class="geo-banner" id="geoBanner">
+        <h4 id="geoTitle">Включить гео-уведомления?</h4>
+        <p id="geoText">Получай промокоды когда проходишь мимо магазинов</p>
+        <div class="geo-actions" id="geoActions">
+          <button class="btn btn-secondary" onclick="declineGeo()">Позже</button>
+          <button class="btn btn-primary" onclick="enableGeo()">Включить</button>
+        </div>
+      </div>
+
+      <!-- Карта с жёлтыми и серыми пинами, синяя точка пользователя -->
+      <div class="map-block">
+        <div class="user-pin"></div>
+        <div class="pin p1" onclick="openMapSheet('Самокат','#FF3D8B','С','−15%','320')"><span>С</span></div>
+        <div class="pin p2" onclick="openMapSheet('Суши-мастер','#E74C3C','СМ','−20%','500')"><span style="font-size:11px">СМ</span></div>
+        <div class="pin p3" onclick="openMapSheet('Золотое яблоко','#C9A961','З','−10%','450')"><span>З</span></div>
+        <div class="pin p4 pin-grey"><span>Я</span></div>
+        <div class="pin p5 pin-grey"><span>М</span></div>
+      </div>
+
+      <div style="padding:12px 20px 4px;display:flex;gap:16px;font-size:12px;color:var(--gray-text)">
+        <span>🟡 Есть промокод для вас</span>
+        <span style="color:#ccc">⬤</span><span>Нет промокода</span>
+      </div>
+
+      <div class="widget-section" style="padding-top:12px;padding-bottom:8px">
+        <div class="widget-title">Рядом с вами</div>
+      </div>
+      <div class="nearby-list">
+        <div class="nearby-card">
+          <div class="shop-logo" style="background:#FF3D8B">С</div>
+          <div class="info"><div class="name">Самокат</div><div class="meta">150м · есть промокод</div></div>
+          <div class="badge">−15%</div>
+        </div>
+        <div class="nearby-card">
+          <div class="shop-logo" style="background:#E74C3C">СМ</div>
+          <div class="info"><div class="name">Суши-мастер</div><div class="meta">320м · есть промокод</div></div>
+          <div class="badge">−20%</div>
+        </div>
+        <div class="nearby-card">
+          <div class="shop-logo" style="background:#C9A961">З</div>
+          <div class="info"><div class="name">Золотое яблоко</div><div class="meta">500м · есть промокод</div></div>
+          <div class="badge">−10%</div>
+        </div>
+        <div class="nearby-card">
+          <div class="shop-logo" style="background:#FC3F1D">Я</div>
+          <div class="info"><div class="name">Яндекс Еда</div><div class="meta">200м</div></div>
+          <div class="badge-grey">нет скидки</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== PROFILE ============== -->
+    <div class="screen" id="screen-profile">
+      <div class="screen-header"><div class="screen-title">Профиль</div></div>
+
+      <div class="profile-header">
+        <div class="avatar">А</div>
+        <div>
+          <div class="name">Алексей Петров</div>
+          <div class="email">aleksey.p@mail.ru</div>
+        </div>
+      </div>
+
+      <div class="stats-card">
+        <div class="stat-row">
+          <span class="label">Сэкономлено всего</span>
+          <span class="value big">4 280 ₽</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">Применено промокодов</span>
+          <span class="value">12</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">Поделился промокодами</span>
+          <span class="value">3</span>
+        </div>
+      </div>
+
+      <div class="widget-section" style="padding:0 20px 8px">
+        <div class="widget-title">Настройки</div>
+      </div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <span class="label">Гео-уведомления</span>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+          <span class="label">Push-уведомления</span>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="setting-row">
+          <span class="label">Персонализация</span>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <div class="widget-section" style="padding:0 20px 8px">
+        <div class="widget-title">Последние промокоды</div>
+      </div>
+      <div class="history-block" style="margin-top:0">
+        <div class="history-row">
+          <div class="shop-logo" style="background:#000">L</div>
+          <div class="info">Lamoda · TBANK20<div class="when">3 дня назад</div></div>
+          <div class="amount">−1 200 ₽</div>
+        </div>
+        <div class="history-row">
+          <div class="shop-logo" style="background:#FC3F1D">Я</div>
+          <div class="info">Яндекс Еда · FOOD10<div class="when">неделю назад</div></div>
+          <div class="amount">−180 ₽</div>
+        </div>
+        <div class="history-row">
+          <div class="shop-logo" style="background:#FF3D8B">С</div>
+          <div class="info">Самокат · SAMOKAT20<div class="when">2 недели назад</div></div>
+          <div class="amount">−320 ₽</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== 5-PROMO STORY ============== -->
+    <div class="promo-story-screen" id="promoStoryScreen">
+      <div class="pst-dots">
+        <span class="on"></span>
+        <span class="on"></span>
+        <span class="on"></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="pst-header">
+        <div>
+          <div class="pst-title">5 промокодов<br>специально для тебя</div>
+          <div class="pst-sub">На основе твоих покупок</div>
+        </div>
+        <button class="story-close" onclick="closePromoStory()">×</button>
+      </div>
+      <div class="pst-cards">
+        <div class="pst-card">
+          <div class="pst-logo" style="background:#FF3D8B">С</div>
+          <div class="pst-info">
+            <div class="pst-name">Самокат</div>
+            <div class="pst-disc">−15%</div>
+          </div>
+          <button class="pst-btn" onclick="activatePstCard(this)">Активировать</button>
+        </div>
+        <div class="pst-card">
+          <div class="pst-logo" style="background:#00704A">S</div>
+          <div class="pst-info">
+            <div class="pst-name">Starbucks</div>
+            <div class="pst-disc">−20%</div>
+          </div>
+          <button class="pst-btn" onclick="activatePstCard(this)">Активировать</button>
+        </div>
+        <div class="pst-card">
+          <div class="pst-logo" style="background:#C9A961">З</div>
+          <div class="pst-info">
+            <div class="pst-name">Золотое яблоко</div>
+            <div class="pst-disc">−10%</div>
+          </div>
+          <button class="pst-btn" onclick="activatePstCard(this)">Активировать</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== STORY FULLSCREEN ============== -->
+    <div class="story-screen" id="storyScreen">
+      <div class="story-progress" id="storyProgress">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <div class="story-top">
+        <div class="story-logo">
+          <div style="width:28px;height:28px;background:var(--yellow);color:var(--black);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800">Т</div>
+          T-Promo
+        </div>
+        <button class="story-close" onclick="closeStory()">×</button>
+      </div>
+      <div class="story-content">
+        <div id="storyEmoji" class="story-emoji">⚡</div>
+        <h2 id="storyTitle">Подобрано для тебя</h2>
+        <div id="storySubtitle" class="story-sub">персональная подборка</div>
+        <div class="promo-big" id="storyPromoCard">
+          <div class="shop" id="storyShop">Lamoda</div>
+          <div class="disc" id="storyDisc">−20%</div>
+          <div class="save-tag" id="storySave">сэкономишь ≈ 1 200 ₽</div>
+        </div>
+      </div>
+      <div class="story-bottom">
+        <button class="story-apply" onclick="applyFromStory()">Применить промокод</button>
+      </div>
+    </div>
+
+    <!-- ============== SHARE SHEET ============== -->
+    <div class="sheet-overlay" id="shareSheet" onclick="if(event.target.id==='shareSheet')closeShareSheet()">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <h3>Поделись и получи 200 ₽</h3>
+        <p>Друг получит промокод, ты — бонус на счёт</p>
+        <div class="share-btns">
+          <button class="share-btn tg" onclick="closeShareSheet()"><span class="icon">TG</span>Telegram</button>
+          <button class="share-btn wa" onclick="closeShareSheet()"><span class="icon">WA</span>WhatsApp</button>
+          <button class="share-btn link" onclick="closeShareSheet()"><span class="icon">🔗</span>Скопировать ссылку</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== MAP SHEET ============== -->
+    <div class="sheet-overlay" id="mapSheet" onclick="if(event.target.id==='mapSheet')closeMapSheet()">
+      <div class="sheet map-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <div class="shop-logo" id="mapSheetLogo" style="width:48px;height:48px;border-radius:50%;color:white;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:20px"></div>
+          <h3 id="mapSheetTitle"></h3>
+        </div>
+        <div class="pinfo">
+          <div class="disc" id="mapSheetDisc"></div>
+          <div class="save" id="mapSheetSave"></div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="closeMapSheet()">Получить промокод</button>
+      </div>
+    </div>
+
+    <!-- ============== PUSH NOTIFICATION ============== -->
+    <div class="push-overlay" id="pushOverlay">
+      <div class="push-card">
+        <div class="push-top">
+          <div class="push-icon">Т</div>
+          <div class="push-app-lbl">Т-Банк</div>
+          <div class="push-time-lbl">сейчас</div>
+        </div>
+        <div class="push-title">Пришла зарплата 💰</div>
+        <div class="push-body">Суши-мастер даёт −20% до конца дня</div>
+        <div class="push-btns">
+          <button class="push-later" onclick="closePush()">Позже</button>
+          <button class="push-activate" onclick="activatePush()">Активировать</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== TAB BAR ============== -->
+    <div class="tabbar">
+      <div class="tab active" data-screen="home" onclick="switchScreen('home')">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>
+        </div>
+        <span class="label">Главная</span>
+      </div>
+      <div class="tab" data-screen="bonuses" onclick="switchBonuses('promo')">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        </div>
+        <span class="label">Бонусы</span>
+      </div>
+      <div class="tab" data-screen="profile" onclick="switchScreen('profile')">
+        <div class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        </div>
+        <span class="label">Профиль</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ============ DATA ============
+  const promos = [
+    { id: 'lamoda', shop: 'Lamoda', code: 'TBANK20', discount: '−20%', cat: 'одежда', catLabel: 'Одежда', expires: 'до 30 мая', save: 1200, color: '#000000', letter: 'L' },
+    { id: 'goldapple', shop: 'Золотое Яблоко', code: 'APPLE10', discount: '−10%', cat: 'beauty', catLabel: 'Beauty', expires: 'до 25 мая', save: 450, color: '#C9A961', letter: 'З' },
+    { id: 'yandexeda', shop: 'Яндекс Еда', code: 'FOOD10', discount: '−10%', cat: 'еда', catLabel: 'Еда', expires: 'до 31 мая', save: 180, color: '#FC3F1D', letter: 'Я' },
+    { id: 'samokat', shop: 'Самокат', code: 'TBANK15', discount: '−15%', cat: 'продукты', catLabel: 'Продукты', expires: 'до 28 мая', save: 320, color: '#FF3D8B', letter: 'С' },
+    { id: 'ozon', shop: 'Ozon', code: 'OZON500', discount: '−500 ₽', cat: 'all', catLabel: 'Всё', expires: 'до 1 июня', save: 500, color: '#005BFF', letter: 'O' },
+    { id: 'afisha', shop: 'Яндекс Афиша', code: 'AFISHA30', discount: '−30%', cat: 'развлечения', catLabel: 'Развлечения', expires: 'до 20 мая', save: 600, color: '#7B1FA2', letter: 'А' },
+    { id: 'vkusvill', shop: 'ВкусВилл', code: 'VKUSVILL10', discount: '−10%', cat: 'продукты', catLabel: 'Продукты', expires: 'до 31 мая', save: 84, color: '#28C76F', letter: 'В' },
+    { id: 'starbucks', shop: 'Starbucks', code: 'COFFEE15', discount: '−15%', cat: 'еда', catLabel: 'Еда', expires: 'до 31 мая', save: 58, color: '#00704A', letter: 'S' }
+  ];
+
+  const transactions = [
+    { id: 'vkusvill', shop: 'ВкусВилл', amount: '−842 ₽', date: 'Сегодня', color: '#28C76F', letter: 'В', save: 84, code: 'VKUSVILL10', promoId: 'vkusvill' },
+    { id: 'samokat-tx', shop: 'Самокат', amount: '−450 ₽', date: 'Сегодня', color: '#FF3D8B', letter: 'С', save: 67, code: 'TBANK15', promoId: 'samokat' },
+    { id: 'starbucks', shop: 'Starbucks', amount: '−390 ₽', date: 'Вчера', color: '#00704A', letter: 'S', save: 58, code: 'COFFEE15', promoId: 'starbucks' },
+    { id: 'yandexgo', shop: 'Яндекс.Go', amount: '−270 ₽', date: 'Вчера', color: '#FC3F1D', letter: 'Я', save: 0, code: null, promoId: null },
+    { id: 'magnit', shop: 'Магнит', amount: '−1 240 ₽', date: '3 мая', color: '#E74C3C', letter: 'М', save: 0, code: null, promoId: null }
+  ];
+
+  let currentCat = 'all';
+  let mapCameFrom = 'bonuses';
+
+  const stories = [
+    { title: 'Подобрано для тебя', subtitle: 'на основе твоих трат', emoji: '⚡', bg: 'linear-gradient(180deg, #2a2520 0%, #1a1815 100%)', cardBg: 'var(--yellow)', cardColor: 'var(--black)', shopId: 'lamoda', shop: 'Lamoda', discount: '−20%', save: 1200 },
+    { title: 'Beauty день', subtitle: 'косметика и уход', emoji: '💄', bg: 'linear-gradient(180deg, #4d2838 0%, #1f0e16 100%)', cardBg: '#FFE4E8', cardColor: '#1A1A1A', shopId: 'goldapple', shop: 'Золотое Яблоко', discount: '−15%', save: 450 },
+    { title: 'Закажи со скидкой', subtitle: 'любимая еда дешевле', emoji: '🍕', bg: 'linear-gradient(180deg, #4d1a14 0%, #1a0807 100%)', cardBg: '#FFE4D6', cardColor: '#1A1A1A', shopId: 'yandexeda', shop: 'Яндекс Еда', discount: '−10%', save: 180 },
+    { title: 'Скидка в Ozon', subtitle: 'на любые товары', emoji: '🛍', bg: 'linear-gradient(180deg, #102a5d 0%, #050d20 100%)', cardBg: '#005BFF', cardColor: '#FFFFFF', shopId: 'ozon', shop: 'Ozon', discount: '−500 ₽', save: 500 },
+    { title: 'Продукты со скидкой', subtitle: 'быстрая доставка', emoji: '🥑', bg: 'linear-gradient(180deg, #4a0e2c 0%, #1c0510 100%)', cardBg: '#FFD0E1', cardColor: '#1A1A1A', shopId: 'samokat', shop: 'Самокат', discount: '−20%', save: 320 }
+  ];
+
+  let currentStoryIndex = 0;
+
+  // ============ NAVIGATION ============
+  function switchScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + name);
+    if (target) target.classList.add('active');
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const tab = document.querySelector(`.tab[data-screen="${name}"]`);
+    if (tab) tab.classList.add('active');
+  }
+
+  function gotoMap(from) {
+    mapCameFrom = from;
+    switchScreen('map');
+  }
+
+  function showBonusTab(tab) {
+    document.getElementById('bonus-promo-view').style.display = tab === 'promo' ? 'block' : 'none';
+    document.getElementById('bonus-cashback-view').style.display = tab === 'cashback' ? 'block' : 'none';
+    document.getElementById('seg-promo').classList.toggle('active', tab === 'promo');
+    document.getElementById('seg-cashback').classList.toggle('active', tab === 'cashback');
+  }
+
+  function switchBonuses(tab) {
+    switchScreen('bonuses');
+    showBonusTab(tab);
+  }
+
+  // ============ TRANSACTION FEED ============
+  function renderFeed() {
+    const groups = [
+      { label: 'Сегодня', items: transactions.filter(t => t.date === 'Сегодня') },
+      { label: 'Вчера', items: transactions.filter(t => t.date === 'Вчера') },
+      { label: '3 мая', items: transactions.filter(t => t.date === '3 мая') }
+    ];
+
+    let html = '';
+    groups.forEach(g => {
+      if (!g.items.length) return;
+      html += `<div class="feed-date-label">${g.label}</div><div class="tx-group">`;
+      g.items.forEach(t => {
+        html += `
+          <div class="tx-item">
+            <div class="tx-shop-logo" style="background:${t.color}">${t.letter}</div>
+            <div class="tx-info">
+              <div class="tx-name">${t.shop}</div>
+              <div class="tx-when">${t.date}</div>
+            </div>
+            <div class="tx-amount">${t.amount}</div>
+          </div>`;
+        if (t.save) {
+          html += `
+          <div class="tx-hint-row" id="txhint-${t.id}" onclick="gotoPromoFromFeed('${t.promoId}')" style="cursor:pointer">
+            <div class="tx-hint-text">В следующий раз сэкономишь ${t.save} ₽ у ${t.shop}</div>
+            <button class="tx-tap-btn">Смотреть →</button>
+          </div>`;
+        }
+      });
+      html += `</div>`;
+    });
+    document.getElementById('feedList').innerHTML = html;
+  }
+
+  function gotoPromoFromFeed(promoId) {
+    // Сбрасываем фильтр на «Все» чтобы нужная карточка точно была видна
+    currentCat = 'all';
+    document.querySelectorAll('#filterRow .chip').forEach(c => c.classList.remove('active'));
+    const allChip = document.querySelector('#filterRow .chip[data-cat="all"]');
+    if (allChip) allChip.classList.add('active');
+    renderPromoList();
+
+    switchBonuses('promo');
+
+    // Открываем код нужного промокода и скроллим к нему
+    setTimeout(() => {
+      const card = document.querySelector(`.promo-card[data-id="${promoId}"]`);
+      if (!card) return;
+
+      // Раскрываем код
+      const actionsEl = document.getElementById('actions-' + promoId);
+      const revealEl = document.getElementById('reveal-' + promoId);
+      if (actionsEl) actionsEl.style.display = 'none';
+      if (revealEl) revealEl.classList.add('show');
+
+      // Подсвечиваем карточку жёлтым контуром
+      card.style.outline = '3px solid var(--yellow)';
+      card.style.transition = 'outline 0.3s';
+      setTimeout(() => { card.style.outline = 'none'; }, 2200);
+
+      // Скроллим к карточке — scrollIntoView работает внутри overflow-контейнера
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 280);
+  }
+
+  // ============ PROMO LIST ============
+  function renderPromoList() {
+    const filtered = currentCat === 'all'
+      ? promos
+      : promos.filter(p => p.cat === currentCat || p.cat === 'all');
+    document.getElementById('promoList').innerHTML = filtered.map(p => `
+      <div class="promo-card" data-id="${p.id}">
+        <div class="pc-head">
+          <div class="shop-logo" style="background:${p.color}">${p.letter}</div>
+          <div>
+            <h3>${p.shop}</h3>
+            <div class="cat">${p.catLabel}</div>
+          </div>
+        </div>
+        <div class="pc-discount">
+          <div class="num">${p.discount}</div>
+          <div class="exp">${p.expires}</div>
+        </div>
+        <div class="pc-save">Промокод + кэшбэк = <strong>${p.save + Math.round(p.save * 0.05)} ₽</strong></div>
+        <div class="pc-actions" id="actions-${p.id}">
+          <button class="btn btn-primary pc-apply" onclick="applyCode('${p.id}')">Применить</button>
+          <button class="pc-share" onclick="openShareSheet()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+        </div>
+        <div class="pc-code-reveal" id="reveal-${p.id}">
+          <div class="pc-code">${p.code}</div>
+          <button class="pc-copy" onclick="copyCode('${p.code}', this)">Скопировать</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function applyCode(id) {
+    document.getElementById('actions-' + id).style.display = 'none';
+    document.getElementById('reveal-' + id).classList.add('show');
+  }
+  function copyCode(code, btn) {
+    navigator.clipboard?.writeText(code);
+    btn.textContent = '✓ Скопировано';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Скопировать'; btn.classList.remove('copied'); }, 1800);
+  }
+
+  // ============ CASHBACK PROMO ============
+  function revealCbCode(btn, code, codeId) {
+    btn.style.display = 'none';
+    document.getElementById(codeId).classList.add('show');
+  }
+
+  // ============ FILTERS ============
+  document.getElementById('filterRow').addEventListener('click', (e) => {
+    const c = e.target.closest('.chip');
+    if (!c) return;
+    document.querySelectorAll('#filterRow .chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    currentCat = c.dataset.cat;
+    renderPromoList();
+  });
+
+  // ============ STORY ============
+  function openStory(index) {
+    if (typeof index !== 'number') index = 0;
+    currentStoryIndex = index;
+    const s = stories[index];
+    const screen = document.getElementById('storyScreen');
+
+    document.getElementById('storyTitle').textContent = s.title;
+    document.getElementById('storySubtitle').textContent = s.subtitle;
+    document.getElementById('storyEmoji').textContent = s.emoji;
+    document.getElementById('storyShop').textContent = s.shop;
+    document.getElementById('storyDisc').textContent = s.discount;
+    document.getElementById('storySave').textContent = 'сэкономишь ≈ ' + s.save + ' ₽';
+
+    screen.style.background = s.bg;
+    const card = document.getElementById('storyPromoCard');
+    card.style.background = s.cardBg;
+    card.style.color = s.cardColor;
+
+    const bars = document.querySelectorAll('#storyProgress .bar');
+    bars.forEach((b, i) => {
+      b.classList.remove('active', 'done');
+      if (i < index) b.classList.add('done');
+      if (i === index) b.classList.add('active');
+    });
+
+    screen.classList.add('show');
+  }
+  function closeStory() {
+    document.getElementById('storyScreen').classList.remove('show');
+  }
+  function applyFromStory() {
+    const shopId = stories[currentStoryIndex].shopId;
+    closeStory();
+    switchBonuses('promo');
+    setTimeout(() => applyCode(shopId), 300);
+  }
+
+  // ============ 5-PROMO STORY ============
+  function openPromoStory() {
+    document.getElementById('promoStoryScreen').classList.add('show');
+  }
+  function closePromoStory() {
+    document.getElementById('promoStoryScreen').classList.remove('show');
+  }
+  function activatePstCard(btn) {
+    btn.textContent = '✓ Активирован';
+    btn.classList.add('done');
+  }
+
+  // ============ PUSH NOTIFICATION ============
+  function closePush() {
+    document.getElementById('pushOverlay').classList.add('gone');
+  }
+  function activatePush() {
+    const sushiCard = document.getElementById('cbcard-sushi');
+    if (sushiCard) sushiCard.style.display = 'block';
+    closePush();
+    switchBonuses('cashback');
+    setTimeout(() => {
+      sushiCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 400);
+  }
+
+  // ============ SHARE SHEET ============
+  function openShareSheet() { document.getElementById('shareSheet').classList.add('show'); }
+  function closeShareSheet() { document.getElementById('shareSheet').classList.remove('show'); }
+
+  // ============ GEO ============
+  function enableGeo() {
+    const banner = document.getElementById('geoBanner');
+    banner.classList.add('enabled');
+    document.getElementById('geoTitle').textContent = 'Уведомления включены ✓';
+    document.getElementById('geoText').textContent = 'Будем сообщать о промокодах рядом';
+    document.getElementById('geoActions').style.display = 'none';
+  }
+  function declineGeo() {
+    document.getElementById('geoBanner').style.display = 'none';
+  }
+
+  // ============ MAP SHEET ============
+  function openMapSheet(name, color, letter, disc, save) {
+    document.getElementById('mapSheetTitle').textContent = name;
+    const logo = document.getElementById('mapSheetLogo');
+    logo.style.background = color;
+    logo.textContent = letter;
+    document.getElementById('mapSheetDisc').textContent = 'Промокод ' + disc;
+    document.getElementById('mapSheetSave').textContent = 'сэкономишь ≈ ' + save + ' ₽';
+    document.getElementById('mapSheet').classList.add('show');
+  }
+  function closeMapSheet() {
+    document.getElementById('mapSheet').classList.remove('show');
+  }
+
+  // ============ INIT ============
+  renderPromoList();
+  renderFeed();
+</script>
+</body>
+</html>
